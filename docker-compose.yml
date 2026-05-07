@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # MiMo Agent Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mimo-gateway
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - MIMO_API_KEY=${MIMO_API_KEY}
+      - MIMO_API_URL=${MIMO_API_URL:-https://api.mimo.com/v1}
+      - DATABASE_URL=sqlite:/data/mimo.db
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - mimo-data:/data
+      - /app/node_modules
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - mimo-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: mimo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - mimo-network
+
+  # Web版本 (可选)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: mimo-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://gateway:3001
+    depends_on:
+      - gateway
+    restart: unless-stopped
+    networks:
+      - mimo-network
+
+networks:
+  mimo-network:
+    driver: bridge
+
+volumes:
+  mimo-data:
+  redis-data:

@@ -1,0 +1,19 @@
+{
+  "name": "@mimo/mimo-connector",
+  "version": "1.0.0",
+  "description": "MiMo大模型API连接器",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@mimo/shared": "1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@mimo/cli",
+  "version": "1.0.0",
+  "description": "MiMo Agent命令行工具",
+  "main": "dist/index.js",
+  "bin": {
+    "mimo": "./bin/mimo.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "link": "npm link"
+  },
+  "dependencies": {
+    "@mimo/agent": "1.0.0",
+    "@mimo/mimo-connector": "1.0.0",
+    "@mimo/shared": "1.0.0",
+    "@mimo/device-bridge": "1.0.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/inquirer": "^8.9.0",
+    "typescript": "^5.3.3"
+  }
+}
