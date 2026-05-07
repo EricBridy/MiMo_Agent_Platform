@@ -2,7 +2,7 @@
  * MiMo Agent - React Native移动端应用入口
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -62,13 +62,13 @@ const App: React.FC = () => {
   const [serverUrl, setServerUrl] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   
-  let socket: Socket | null = null;
+  const socketRef = useRef<Socket | null>(null);
   
   // 初始化连接
   useEffect(() => {
     loadServerUrl();
     return () => {
-      socket?.disconnect();
+      socketRef.current?.disconnect();
     };
   }, []);
   
@@ -89,32 +89,32 @@ const App: React.FC = () => {
   
   // 连接到服务器
   const connectToServer = (url: string) => {
-    if (socket) {
-      socket.disconnect();
+    if (socketRef.current) {
+      socketRef.current.disconnect();
     }
     
-    socket = io(url, {
+    socketRef.current = io(url, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5
     });
     
-    socket.on('connect', () => {
+    socketRef.current.on('connect', () => {
       console.log('Connected to server');
       setConnected(true);
       
       // 获取设备列表
-      socket?.emit('device:list', (deviceList: Device[]) => {
+      socketRef.current?.emit('device:list', (deviceList: Device[]) => {
         setDevices(deviceList);
       });
     });
     
-    socket.on('disconnect', () => {
+    socketRef.current.on('disconnect', () => {
       console.log('Disconnected from server');
       setConnected(false);
     });
     
-    socket.on('device:discovered', (device: Device) => {
+    socketRef.current.on('device:discovered', (device: Device) => {
       setDevices(prev => {
         const exists = prev.find(d => d.id === device.id);
         if (exists) {
@@ -124,11 +124,11 @@ const App: React.FC = () => {
       });
     });
     
-    socket.on('device:connected', (device: Device) => {
+    socketRef.current.on('device:connected', (device: Device) => {
       setDevices(prev => prev.map(d => d.id === device.id ? device : d));
     });
     
-    socket.on('message', (response: any) => {
+    socketRef.current.on('message', (response: any) => {
       if (response.success && response.message) {
         setMessages(prev => [...prev, {
           ...response.message,
@@ -138,7 +138,7 @@ const App: React.FC = () => {
       setIsLoading(false);
     });
     
-    socket.on('error', (error: any) => {
+    socketRef.current.on('error', (error: any) => {
       Alert.alert('错误', error.message);
       setIsLoading(false);
     });
@@ -170,7 +170,7 @@ const App: React.FC = () => {
     setInput('');
     setIsLoading(true);
     
-    socket?.emit('message', {
+    socketRef.current?.emit('message', {
       sessionId: selectedDevice?.id || 'default',
       content: input.trim()
     });
@@ -180,7 +180,7 @@ const App: React.FC = () => {
   const wakeDevice = async (device: Device) => {
     try {
       const response = await new Promise<any>((resolve, reject) => {
-        socket?.emit('wake:request', {
+        socketRef.current?.emit('wake:request', {
           deviceId: device.id,
           sourceDevice: 'mobile',
           purpose: 'Quick coding task',

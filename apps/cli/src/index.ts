@@ -8,7 +8,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { AgentEngine, createAgent } from '@mimo/agent';
 import { MiMoConnector } from '@mimo/mimo-connector';
-import { generateId, EventEmitter } from '@mimo/shared';
+import { generateId, EventEmitter, Platform } from '@mimo/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
@@ -63,7 +63,7 @@ async function initializeAgent() {
     device: {
       id: generateId('device'),
       name: 'MiMo CLI',
-      platform: process.platform as any,
+      platform: process.platform as Platform,
       type: 'cli',
       status: 'connected',
       lastSeen: new Date(),
