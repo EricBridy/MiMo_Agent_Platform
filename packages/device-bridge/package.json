@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mimo/shared": "1.0.0",
+    "@mimo/shared": "file:../shared",
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {

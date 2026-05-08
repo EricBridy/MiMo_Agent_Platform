@@ -17,6 +17,8 @@ import {
   EventEmitter
 } from '@mimo/shared';
 import { MiMoConnector } from '@mimo/mimo-connector';
+import { allTools } from './tools';
+import { ToolPermissionManager, createDefaultPermissionManager } from './tools/permission';
 
 export interface AgentConfig {
   session: Session;
@@ -25,6 +27,7 @@ export interface AgentConfig {
   tools: Tool[];
   maxIterations?: number;
   enableToolCalls?: boolean;
+  permissionManager?: ToolPermissionManager;
 }
 
 export interface AgentEvents {
@@ -39,10 +42,13 @@ export class AgentEngine extends EventEmitter<AgentEvents> {
   private config: AgentConfig;
   private messageHistory: AgentMessage[] = [];
   private toolCallHistory: ToolCall[] = [];
+  private permissionManager: ToolPermissionManager;
   
   constructor(config: AgentConfig) {
     super();
     this.config = config;
+    // 初始化权限管理器
+    this.permissionManager = config.permissionManager || createDefaultPermissionManager();
   }
   
   /**
@@ -92,7 +98,7 @@ export class AgentEngine extends EventEmitter<AgentEvents> {
       // 调用MiMo API
       const result = await this.config.mimoConnector.chat({
         messages: this.messageHistory.map(m => ({
-          role: m.role,
+          role: m.role === 'tool' ? 'assistant' : m.role,
           content: m.content
         })),
         context,
@@ -153,6 +159,24 @@ export class AgentEngine extends EventEmitter<AgentEvents> {
    * 执行工具调用
    */
   async executeTool(toolName: string, params: Record<string, unknown>): Promise<ToolResult> {
+    // 权限检查
+    const permissionCheck = await this.permissionManager.preExecuteCheck(toolName, params);
+    if (!permissionCheck.allowed) {
+      return {
+        id: generateId('tool'),
+        toolName,
+        success: false,
+        error: permissionCheck.reason || `Tool '${toolName}' is not allowed`,
+        duration: 0
+      };
+    }
+    
+    // 危险工具需要确认（这里暂时跳过，实际应等待用户确认）
+    if (permissionCheck.needsConfirmation) {
+      console.warn(`⚠️ Tool '${toolName}' requires confirmation (skipping in auto mode)`);
+      // 在实际应用中，这里应该暂停并等待用户确认
+    }
+    
     const tool = this.config.tools.find(t => t.name === toolName);
     
     if (!tool) {

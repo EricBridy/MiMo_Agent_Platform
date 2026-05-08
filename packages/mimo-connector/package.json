@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mimo/shared": "1.0.0"
+    "@mimo/shared": "file:../shared"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

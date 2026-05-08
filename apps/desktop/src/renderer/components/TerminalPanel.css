@@ -20,6 +20,82 @@
   border-bottom: 1px solid #3e3e42;
 }
 
+.terminal-tabs {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  overflow-x: auto;
+}
+
+.terminal-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #2d2d2d;
+  color: #858585;
+  font-size: 13px;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.terminal-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.terminal-tab.active {
+  background: #1e1e1e;
+  color: #cccccc;
+}
+
+.terminal-tab .tab-icon {
+  font-size: 14px;
+}
+
+.terminal-tab .tab-title {
+  font-size: 13px;
+}
+
+.terminal-tab .tab-close {
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.terminal-tab:hover .tab-close {
+  opacity: 1;
+}
+
+.terminal-tab .tab-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.new-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: transparent;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  font-size: 18px;
+  border-radius: 4px;
+}
+
+.new-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cccccc;
+}
+
+.terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .terminal-title {
   font-size: 13px;
   color: #cccccc;

@@ -7,6 +7,7 @@ import { createServer, Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
+// @ts-ignore
 import morgan from 'morgan';
 import { AgentEngine, createAgent } from '@mimo/agent';
 import { MiMoConnector, MiMoConfig } from '@mimo/mimo-connector';
@@ -108,10 +109,11 @@ export class AgentServer {
         const agent = this.agents.get(sessionId);
         
         if (!agent) {
-          return res.status(404).json({
+          res.status(404).json({
             success: false,
             error: 'Session not found'
           });
+          return;
         }
         
         const request: AgentRequest = {

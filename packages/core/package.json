@@ -10,8 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mimo/shared": "1.0.0",
-    "@mimo/mimo-connector": "1.0.0"
+    "@mimo/shared": "file:../shared",
+    "@mimo/mimo-connector": "file:../mimo-connector"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

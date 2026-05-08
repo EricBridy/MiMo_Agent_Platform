@@ -33,6 +33,18 @@ const COLORS = {
   border: 'rgba(0, 0, 0, 0.1)'
 };
 
+// 导入推送通知服务
+let PushNotificationService: any = null;
+
+// 动态导入推送服务（避免 JPush 未安装时报错）
+try {
+  // 实际使用时取消注释
+  // PushNotificationService = require('./PushNotificationService').default;
+  console.log('推送通知服务模块加载成功（当前为模拟模式）');
+} catch (error) {
+  console.log('推送通知服务未安装，使用模拟模式');
+}
+
 // 消息类型
 interface Message {
   id: string;
@@ -59,16 +71,25 @@ const App: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showDevices, setShowDevices] = useState(false);
-  const [serverUrl, setServerUrl] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<'chat' | 'files' | 'commands' | 'status'>('chat');
+  const [mobileFiles, setMobileFiles] = useState<any[]>([]);
   
   const socketRef = useRef<Socket | null>(null);
   
   // 初始化连接
   useEffect(() => {
+    // 初始化推送通知服务
+    if (PushNotificationService) {
+      PushNotificationService.initilize('YOUR_JPUSH_APP_KEY');
+      console.log('推送通知服务已初始化');
+    }
+    
     loadServerUrl();
     return () => {
       socketRef.current?.disconnect();
+      if (PushNotificationService) {
+        PushNotificationService.cleanup();
+      }
     };
   }, []);
   

@@ -12,10 +12,10 @@
     "link": "npm link"
   },
   "dependencies": {
-    "@mimo/agent": "1.0.0",
-    "@mimo/mimo-connector": "1.0.0",
-    "@mimo/shared": "1.0.0",
-    "@mimo/device-bridge": "1.0.0",
+    "@mimo/agent": "file:../../packages/core/agent",
+    "@mimo/mimo-connector": "file:../../packages/mimo-connector",
+    "@mimo/shared": "file:../../packages/shared",
+    "@mimo/device-bridge": "file:../../packages/device-bridge",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "inquirer": "^8.2.5",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@types/inquirer": "^8.9.0",
+    "@types/inquirer": "^8.2.10",
     "typescript": "^5.3.3"
   }
 }

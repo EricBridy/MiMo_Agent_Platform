@@ -14,7 +14,7 @@ let agentServer: AgentServer | null = null;
 let deviceBridge: DeviceBridge | null = null;
 
 // 环境变量
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = false; // 强制使用生产模式
 
 class MiMoDesktopApp {
   private deviceId: string;
@@ -96,7 +96,7 @@ class MiMoDesktopApp {
       await mainWindow.loadURL('http://localhost:5173');
       mainWindow.webContents.openDevTools();
     } else {
-      await mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+      await mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
     }
     
     // 显示窗口
@@ -106,6 +106,7 @@ class MiMoDesktopApp {
     
     // 窗口关闭时最小化到托盘
     mainWindow.on('close', (event) => {
+      // @ts-ignore
       if (!app.isQuitting) {
         event.preventDefault();
         mainWindow?.hide();

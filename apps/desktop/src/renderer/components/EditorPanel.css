@@ -131,8 +131,36 @@
   color: #cccccc;
 }
 
+.tab-icon {
+  font-size: 14px;
+}
+
+.tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.tab:hover .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .dirty-dot {
   color: #cccccc;
+  font-size: 10px;
 }
 
 .editor-wrapper {

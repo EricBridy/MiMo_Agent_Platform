@@ -327,6 +327,191 @@ export class DeviceBridge extends EventEmitter {
   setServerUrl(url: string): void {
     this.serverUrl = url;
   }
+
+  /**
+   * 启动心跳检测
+   */
+  startHeartbeat(interval: number = 30000): void {
+    if (!this.socket?.connected) {
+      console.warn('Socket not connected, cannot start heartbeat');
+      return;
+    }
+
+    console.log(`💓� 启动心跳检测（间隔：${interval}ms）...`);
+    
+    // 定期发送心跳
+    const heartbeatInterval = setInterval(() => {
+      if (!this.socket?.connected) {
+        console.warn('⚠️ 心跳停止：连接已断开');
+        clearInterval(heartbeatInterval);
+        return;
+      }
+
+      this.socket.emit('heartbeat', {
+        deviceId: this.config.deviceId,
+        timestamp: new Date(),
+        status: 'alive'
+      });
+    }, interval);
+
+    // 监听心跳响应
+    this.socket.on('heartbeat:ack', (data: any) => {
+      console.log(`💓� 心跳响应: ${data.deviceId} (延迟: ${Date.now() - new Date(data.timestamp).getTime()}ms)`);
+    });
+
+    // 监听其他设备的心跳（用于检测设备是否在线）
+    this.socket.on('heartbeat:received', (data: any) => {
+      const device = this.connectedDevices.get(data.deviceId);
+      if (device) {
+        device.lastSeen = new Date();
+        this.connectedDevices.set(data.deviceId, device);
+        this.emit('device:status_updated', device);
+      }
+    });
+  }
+
+  /**
+   * 停止心跳检测
+   */
+  stopHeartbeat(): void {
+    this.socket?.off('heartbeat:ack');
+    this.socket?.off('heartbeat:received');
+    console.log('⏹️ 心跳检测已停止');
+  }
+
+  /**
+   * 设备能力协商（根据对端能力调整行为）
+   */
+  negotiateCapabilities(targetDeviceId: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket?.connected) {
+        reject(new Error('Not connected to server'));
+        return;
+      }
+
+      const localCapabilities = this.getCapabilities();
+      
+      console.log(`🤝 开始能力协商 with ${targetDeviceId}...`);
+      
+      this.socket.emit('capability:negotiate', {
+        sourceDeviceId: this.config.deviceId,
+        targetDeviceId,
+        capabilities: localCapabilities
+      }, (response: any) => {
+        if (response.success) {
+          console.log(`✅ 能力协商完成:`, response.agreedCapabilities);
+          resolve(response.agreedCapabilities);
+        } else {
+          reject(new Error(response.error || 'Capability negotiation failed'));
+        }
+      });
+    });
+  }
+
+  /**
+   * 处理能力协商请求（内部调用）
+   */
+  private handleCapabilityNegotiation(): void {
+    if (!this.socket) return;
+
+    this.socket.on('capability:negotiate', (request: any, callback: Function) => {
+      console.log(`🤝 收到能力协商请求 from ${request.sourceDeviceId}`);
+      
+      const localCapabilities = this.getCapabilities();
+      const remoteCapabilities = request.capabilities;
+
+      // 简单协商策略：取两者的最小值/交集
+      const agreed: any = {
+        canExecuteCommands: localCapabilities.canExecuteCommands && remoteCapabilities.canExecuteCommands,
+        canAccessFilesystem: localCapabilities.canAccessFilesystem && remoteCapabilities.canAccessFilesystem,
+        canRunGUI: localCapabilities.canRunGUI || remoteCapabilities.canRunGUI, // 任一设备支持 GUI 即可
+        maxConcurrentSessions: Math.min(localCapabilities.maxConcurrentSessions, remoteCapabilities.maxConcurrentSessions)
+      };
+
+      callback({
+        success: true,
+        agreedCapabilities: agreed
+      });
+    });
+  }
+
+  /**
+   * 会话迁移（从一个设备迁移到另一个设备）
+   */
+  async migrateSession(sessionId: string, targetDeviceId: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket?.connected) {
+        reject(new Error('Not connected to server'));
+        return;
+      }
+
+      console.log(`🚚 将会话 ${sessionId} 迁移到设备 ${targetDeviceId}...`);
+      
+      this.socket.emit('session:migrate', {
+        sessionId,
+        sourceDeviceId: this.config.deviceId,
+        targetDeviceId,
+        timestamp: new Date()
+      }, (response: any) => {
+        if (response.success) {
+          console.log(`✅ 会话迁移成功:`, response.newSessionId);
+          this.emit('session:migrated', {
+            oldSessionId: sessionId,
+            newSessionId: response.newSessionId,
+            targetDeviceId
+          });
+          resolve(response);
+        } else {
+          reject(new Error(response.error || 'Session migration failed'));
+        }
+      });
+    });
+  }
+
+  /**
+   * 处理会话迁移请求（内部调用）
+   */
+  private handleSessionMigration(): void {
+    if (!this.socket) return;
+
+    this.socket.on('session:migrate', async (request: any, callback: Function) => {
+      console.log(`🚚 收到会话迁移请求: ${request.sessionId} from ${request.sourceDeviceId}`);
+      
+      try {
+        // 这里可以加载会话数据并恢复到本地
+        // 暂时简单确认迁移
+        callback({
+          success: true,
+          newSessionId: request.sessionId, // 实际应该生成新的 session ID
+          message: 'Session migration accepted'
+        });
+      } catch (error) {
+        callback({
+          success: false,
+          error: (error as Error).message
+        });
+      }
+    });
+  }
+
+  /**
+   * 获取设备状态（基于心跳）
+   */
+  getDeviceStatus(deviceId: string): 'online' | 'offline' | 'unknown' {
+    const device = this.connectedDevices.get(deviceId);
+    if (!device) return 'unknown';
+    
+    const lastSeen = new Date(device.lastSeen || 0);
+    const now = new Date();
+    const diffSeconds = (now.getTime() - lastSeen.getTime()) / 1000;
+    
+    // 如果超过 2 个心跳周期未收到心跳，认为离线
+    if (diffSeconds > 60) {
+      return 'offline';
+    }
+    
+    return 'online';
+  }
 }
 
 /**

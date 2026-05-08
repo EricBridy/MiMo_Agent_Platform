@@ -121,7 +121,7 @@ export interface ToolPermission {
 }
 
 export interface ToolHandler {
-  (params: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;
+  (params: Record<string, unknown>, context: ToolContext): Promise<ToolResult | any>;
 }
 
 export interface ToolContext {
