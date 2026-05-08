@@ -1,0 +1,126 @@
+/**
+ * MiMo Agent - 设计系统变量
+ * 参考 Cursor、VS Code、GitHub Copilot 等专业 AI 编辑器
+ */
+
+:root {
+  /* ===== 主色调 ===== */
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+  --color-primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  
+  /* ===== 背景色 - 深色主题 (默认) ===== */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-elevated: #1c2128;
+  --bg-overlay: rgba(13, 17, 23, 0.95);
+  
+  /* ===== 文字色 ===== */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #6e7681;
+  --text-muted: #484f58;
+  --text-inverse: #0d1117;
+  
+  /* ===== 边框色 ===== */
+  --border-primary: #30363d;
+  --border-secondary: #21262d;
+  --border-tertiary: #161b22;
+  
+  /* ===== 状态色 ===== */
+  --color-success: #238636;
+  --color-success-light: #2ea043;
+  --color-warning: #d29922;
+  --color-error: #da3633;
+  --color-info: #58a6ff;
+  
+  /* ===== 语义化颜色 ===== */
+  --color-online: #3fb950;
+  --color-busy: #d29922;
+  --color-offline: #8b949e;
+  
+  /* ===== 间距系统 ===== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  
+  /* ===== 圆角 ===== */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  
+  /* ===== 阴影 ===== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  
+  /* ===== 字体 ===== */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  /* ===== 字体大小 ===== */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  
+  /* ===== 行高 ===== */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+  
+  /* ===== 过渡动画 ===== */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+  
+  /* ===== Z-Index 层级 ===== */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-popover: 400;
+  --z-tooltip: 500;
+  
+  /* ===== 布局尺寸 ===== */
+  --sidebar-width: 280px;
+  --sidebar-collapsed: 60px;
+  --header-height: 48px;
+  --panel-header-height: 40px;
+  --input-height: 44px;
+}
+
+/* ===== 浅色主题 ===== */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f6f8fa;
+  --bg-tertiary: #eaeef2;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(255, 255, 255, 0.95);
+  
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --text-tertiary: #8c959f;
+  --text-muted: #b7bdc4;
+  
+  --border-primary: #d0d7de;
+  --border-secondary: #e6edf3;
+  --border-tertiary: #f6f8fa;
+  
+  --shadow-sm: 0 1px 2px rgba(31, 35, 40, 0.04);
+  --shadow-md: 0 3px 6px rgba(31, 35, 40, 0.08);
+  --shadow-lg: 0 8px 16px rgba(31, 35, 40, 0.12);
+}

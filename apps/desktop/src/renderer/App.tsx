@@ -1,8 +1,9 @@
 /**
  * MiMo Agent - 主应用组件
+ * 参考 Cursor、VS Code 等专业 AI 编辑器设计
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from './store';
 import Sidebar from './components/Sidebar';
 import ChatPanel from './components/ChatPanel';
@@ -18,10 +19,12 @@ function App() {
     setView,
     loadDeviceInfo,
     showSettings,
-    setShowSettings
+    setShowSettings,
+    isLoading
   } = useStore();
   
   const [terminalVisible, setTerminalVisible] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   useEffect(() => {
     // 加载设备信息
@@ -35,9 +38,15 @@ function App() {
     
     // 键盘快捷键
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === '`' && e.ctrlKey) {
+      // Ctrl/Cmd + ` 切换终端
+      if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setTerminalVisible(v => !v);
+      }
+      // Ctrl/Cmd + B 切换侧边栏
+      if (e.key === 'b' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setSidebarCollapsed(v => !v);
       }
     };
     
@@ -48,30 +57,53 @@ function App() {
     };
   }, []);
   
+  const handleViewChange = useCallback((view: 'chat' | 'editor' | 'devices') => {
+    setView(view);
+  }, [setView]);
+  
   return (
     <div className="app">
       <Sidebar 
         currentView={currentView} 
-        onViewChange={setView}
+        onViewChange={handleViewChange}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
-      <main className="main-content">
-        {currentView === 'chat' && (
-          <div className="content-wrapper">
-            <ChatPanel />
-            {terminalVisible && (
-              <TerminalPanel onClose={() => setTerminalVisible(false)} />
-            )}
-          </div>
-        )}
-        
-        {currentView === 'editor' && <EditorPanel />}
-        
-        {currentView === 'devices' && <DevicePanel />}
+      <main className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
+        <div className="content-area">
+          {currentView === 'chat' && (
+            <div className="view-container chat-view">
+              <ChatPanel />
+              {terminalVisible && (
+                <TerminalPanel onClose={() => setTerminalVisible(false)} />
+              )}
+            </div>
+          )}
+          
+          {currentView === 'editor' && (
+            <div className="view-container">
+              <EditorPanel />
+            </div>
+          )}
+          
+          {currentView === 'devices' && (
+            <div className="view-container">
+              <DevicePanel />
+            </div>
+          )}
+        </div>
       </main>
       
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+      
+      {isLoading && (
+        <div className="global-loading-overlay">
+          <div className="loading-spinner" />
+          <span>Loading...</span>
+        </div>
       )}
     </div>
   );
