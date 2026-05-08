@@ -73,6 +73,8 @@ const App: React.FC = () => {
   const [showDevices, setShowDevices] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<'chat' | 'files' | 'commands' | 'status'>('chat');
   const [mobileFiles, setMobileFiles] = useState<any[]>([]);
+  const [serverUrl, setServerUrl] = useState('http://localhost:3001');
+  const [showSettings, setShowSettings] = useState(false);
   
   const socketRef = useRef<Socket | null>(null);
   
