@@ -1,17 +1,14 @@
 /**
- * Gateway Service - 设备路由
+ * Gateway Service - 设备路由 (使用数据库持久化)
  */
 
 import { Router } from 'express';
 import { asyncHandler, ApiError } from '../middleware/error-handler';
 import { apiKeyAuth } from '../middleware/auth';
 import { logger } from '../utils/logger';
-import { Device } from '../types';
+import DeviceService from '../services/device.service';
 
 const router = Router();
-
-// 内存存储设备（实际应该用数据库）
-const devices = new Map<string, Device>();
 
 // 注册设备
 router.post('/register', apiKeyAuth, asyncHandler(async (req, res) => {
@@ -21,24 +18,18 @@ router.post('/register', apiKeyAuth, asyncHandler(async (req, res) => {
     throw new ApiError(400, 'id, name, platform, type are required');
   }
   
-  const device: Device = {
-    id,
+  const device = await DeviceService.registerDevice({
+    deviceId: id,
     name,
     platform,
     type,
-    status: 'online',
-    lastSeen: new Date(),
     capabilities: capabilities || {
       canExecuteCommands: true,
       canAccessFilesystem: true,
       canRunGUI: true,
       maxConcurrentSessions: 5
     },
-    ipAddress,
-    port
-  };
-  
-  devices.set(id, device);
+  });
   
   logger.info('Device registered', { deviceId: id, name, platform });
   
@@ -52,37 +43,27 @@ router.post('/register', apiKeyAuth, asyncHandler(async (req, res) => {
 router.get('/', apiKeyAuth, asyncHandler(async (req, res) => {
   const { type, status } = req.query;
   
-  let deviceList = Array.from(devices.values());
+  let devices = await DeviceService.getDevices();
   
+  // 过滤
   if (type) {
-    deviceList = deviceList.filter(d => d.type === type);
+    devices = devices.filter(d => d.type === type);
   }
   
   if (status) {
-    deviceList = deviceList.filter(d => d.status === status);
+    devices = devices.filter(d => d.status === status);
   }
-  
-  // 更新离线设备状态
-  const now = new Date();
-  deviceList = deviceList.map(d => {
-    const lastSeen = new Date(d.lastSeen);
-    const diffMinutes = (now.getTime() - lastSeen.getTime()) / 1000 / 60;
-    if (diffMinutes > 5 && d.status === 'online') {
-      d.status = 'offline';
-    }
-    return d;
-  });
   
   res.json({
     success: true,
-    data: deviceList,
-    count: deviceList.length
+    data: devices,
+    count: devices.length
   });
 }));
 
 // 获取单个设备
 router.get('/:id', apiKeyAuth, asyncHandler(async (req, res) => {
-  const device = devices.get(req.params.id);
+  const device = await DeviceService.getDevice(req.params.id);
   
   if (!device) {
     throw new ApiError(404, 'Device not found');
@@ -97,18 +78,12 @@ router.get('/:id', apiKeyAuth, asyncHandler(async (req, res) => {
 // 更新设备状态
 router.put('/:id/status', apiKeyAuth, asyncHandler(async (req, res) => {
   const { status } = req.body;
-  const device = devices.get(req.params.id);
-  
-  if (!device) {
-    throw new ApiError(404, 'Device not found');
-  }
   
   if (!['online', 'offline', 'busy'].includes(status)) {
     throw new ApiError(400, 'Invalid status');
   }
   
-  device.status = status;
-  device.lastSeen = new Date();
+  const device = await DeviceService.updateDeviceStatus(req.params.id, status);
   
   logger.info('Device status updated', { deviceId: req.params.id, status });
   
@@ -120,16 +95,7 @@ router.put('/:id/status', apiKeyAuth, asyncHandler(async (req, res) => {
 
 // 设备心跳
 router.post('/:id/heartbeat', apiKeyAuth, asyncHandler(async (req, res) => {
-  const device = devices.get(req.params.id);
-  
-  if (!device) {
-    throw new ApiError(404, 'Device not found');
-  }
-  
-  device.lastSeen = new Date();
-  if (device.status === 'offline') {
-    device.status = 'online';
-  }
+  const device = await DeviceService.heartbeat(req.params.id);
   
   res.json({
     success: true,
@@ -139,13 +105,7 @@ router.post('/:id/heartbeat', apiKeyAuth, asyncHandler(async (req, res) => {
 
 // 删除设备
 router.delete('/:id', apiKeyAuth, asyncHandler(async (req, res) => {
-  const device = devices.get(req.params.id);
-  
-  if (!device) {
-    throw new ApiError(404, 'Device not found');
-  }
-  
-  devices.delete(req.params.id);
+  await DeviceService.deleteDevice(req.params.id);
   
   logger.info('Device deleted', { deviceId: req.params.id });
   

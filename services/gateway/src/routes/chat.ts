@@ -1,5 +1,5 @@
 /**
- * Gateway Service - 聊天路由
+ * Gateway Service - 聊天路由 (使用数据库持久化)
  */
 
 import { Router } from 'express';
@@ -7,34 +7,25 @@ import { asyncHandler, ApiError } from '../middleware/error-handler';
 import { apiKeyAuth } from '../middleware/auth';
 import { standardRateLimit } from '../middleware/rate-limit';
 import { logger } from '../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
+import SessionService from '../services/session.service';
 
 const router = Router();
-const sessions = new Map<string, any>();
-const messages = new Map<string, any[]>();
 
 // 创建会话
 router.post('/sessions', apiKeyAuth, standardRateLimit, asyncHandler(async (req, res) => {
-  const { deviceId, projectPath } = req.body;
+  const { deviceId, projectPath, context } = req.body;
   
   if (!deviceId) {
     throw new ApiError(400, 'deviceId is required');
   }
   
-  const sessionId = uuidv4();
-  const session = {
-    id: sessionId,
+  const session = await SessionService.createSession({
     deviceId,
     projectPath,
-    startedAt: new Date(),
-    lastActivity: new Date(),
-    status: 'active'
-  };
+    context,
+  });
   
-  sessions.set(sessionId, session);
-  messages.set(sessionId, []);
-  
-  logger.info('Session created', { sessionId, deviceId });
+  logger.info('Session created', { sessionId: session.id, deviceId });
   
   res.status(201).json({
     success: true,
@@ -45,15 +36,53 @@ router.post('/sessions', apiKeyAuth, standardRateLimit, asyncHandler(async (req,
 // 获取会话列表
 router.get('/sessions', apiKeyAuth, asyncHandler(async (req, res) => {
   const { deviceId } = req.query;
-  let sessionList = Array.from(sessions.values());
   
-  if (deviceId) {
-    sessionList = sessionList.filter(s => s.deviceId === deviceId);
+  const sessions = await SessionService.getSessions(deviceId as string);
+  
+  res.json({
+    success: true,
+    data: sessions
+  });
+}));
+
+// 获取单个会话
+router.get('/sessions/:id', apiKeyAuth, asyncHandler(async (req, res) => {
+  const session = await SessionService.getSession(req.params.id);
+  
+  if (!session) {
+    throw new ApiError(404, 'Session not found');
   }
   
   res.json({
     success: true,
-    data: sessionList
+    data: session
+  });
+}));
+
+// 更新会话
+router.patch('/sessions/:id', apiKeyAuth, asyncHandler(async (req, res) => {
+  const { projectPath, context } = req.body;
+  
+  const session = await SessionService.updateSession(req.params.id, {
+    projectPath,
+    context,
+  });
+  
+  res.json({
+    success: true,
+    data: session
+  });
+}));
+
+// 删除会话
+router.delete('/sessions/:id', apiKeyAuth, asyncHandler(async (req, res) => {
+  await SessionService.deleteSession(req.params.id);
+  
+  logger.info('Session deleted', { sessionId: req.params.id });
+  
+  res.json({
+    success: true,
+    message: 'Session deleted'
   });
 }));
 
@@ -65,23 +94,18 @@ router.post('/chat', apiKeyAuth, standardRateLimit, asyncHandler(async (req, res
     throw new ApiError(400, 'sessionId and message are required');
   }
   
-  const session = sessions.get(sessionId);
+  // 检查会话是否存在
+  const session = await SessionService.getSession(sessionId);
   if (!session) {
     throw new ApiError(404, 'Session not found');
   }
   
-  session.lastActivity = new Date();
-  
-  const userMessage = {
-    id: uuidv4(),
+  // 保存用户消息
+  const userMessage = await SessionService.addMessage({
     sessionId,
     role: 'user',
     content: message,
-    timestamp: new Date()
-  };
-  
-  const sessionMessages = messages.get(sessionId) || [];
-  sessionMessages.push(userMessage);
+  });
   
   // 调用 MiMo API
   const mimoApiUrl = process.env.MIMO_API_URL || 'http://localhost:3002';
@@ -99,26 +123,36 @@ router.post('/chat', apiKeyAuth, standardRateLimit, asyncHandler(async (req, res
     
     const data = await response.json();
     
-    const assistantMessage = {
-      id: uuidv4(),
+    // 保存 AI 响应
+    const assistantMessage = await SessionService.addMessage({
       sessionId,
       role: 'assistant',
       content: data.choices[0].message.content,
-      timestamp: new Date()
-    };
-    
-    sessionMessages.push(assistantMessage);
-    messages.set(sessionId, sessionMessages);
+      metadata: { model: data.model || 'mimo-mock' },
+    });
     
     res.json({
       success: true,
-      data: { message: assistantMessage }
+      data: { 
+        userMessage,
+        assistantMessage 
+      }
     });
     
   } catch (error) {
     logger.error('Failed to call MiMo API', { error });
     throw new ApiError(502, 'Failed to get response from AI service');
   }
+}));
+
+// 获取会话消息
+router.get('/sessions/:id/messages', apiKeyAuth, asyncHandler(async (req, res) => {
+  const messages = await SessionService.getMessages(req.params.id);
+  
+  res.json({
+    success: true,
+    data: messages
+  });
 }));
 
 export default router;

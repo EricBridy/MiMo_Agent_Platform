@@ -13,6 +13,7 @@ import { notFoundHandler, errorHandler } from './middleware/error-handler';
 import chatRoutes from './routes/chat';
 import deviceRoutes from './routes/devices';
 import fileRoutes from './routes/files';
+import projectRoutes from './routes/projects';
 
 export const createApp = () => {
   const app = express();
@@ -47,9 +48,10 @@ export const createApp = () => {
   });
   
   // API 路由
-  app.use('/api/v1/chat', chatRoutes);
-  app.use('/api/v1/devices', deviceRoutes);
-  app.use('/api/v1/files', fileRoutes);
+app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/devices', deviceRoutes);
+app.use('/api/v1/files', fileRoutes);
+app.use('/api/v1/projects', projectRoutes);
   
   // 404 处理
   app.use(notFoundHandler);
