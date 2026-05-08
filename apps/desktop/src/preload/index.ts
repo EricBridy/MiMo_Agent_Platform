@@ -26,7 +26,10 @@ contextBridge.exposeInMainWorld('mimoAPI', {
     openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
     read: (path: string) => ipcRenderer.invoke('file:read', path),
     write: (path: string, content: string) => ipcRenderer.invoke('file:write', path, content),
-    listDir: (path: string) => ipcRenderer.invoke('file:listDir', path)
+    listDir: (path: string) => ipcRenderer.invoke('file:listDir', path),
+    delete: (path: string) => ipcRenderer.invoke('file:delete', path),
+    rename: (oldPath: string, newPath: string) => ipcRenderer.invoke('file:rename', oldPath, newPath),
+    createDir: (path: string) => ipcRenderer.invoke('file:createDir', path)
   },
   
   // 终端
@@ -85,6 +88,9 @@ declare global {
         read: (path: string) => Promise<string>;
         write: (path: string, content: string) => Promise<boolean>;
         listDir: (path: string) => Promise<any[]>;
+        delete: (path: string) => Promise<boolean>;
+        rename: (oldPath: string, newPath: string) => Promise<boolean>;
+        createDir: (path: string) => Promise<boolean>;
       };
       terminal: {
         execute: (command: string, cwd?: string) => Promise<any>;

@@ -158,14 +158,13 @@ const FileTree: React.FC<FileTreeProps> = ({ projectPath, currentFile, onFileOpe
   };
 
   // 删除
-  const handleDelete = async (path: string) => {
-    const confirm = window.confirm(`确定要删除 ${path.split('/').pop()} 吗？`);
-    if (!confirm) return;
+  const handleDelete = async (filePath: string) => {
+    const confirm = window.confirm(`确定要删除 ${filePath.split('/').pop()} 吗？`);
+    if (!confirm || !projectPath) return;
 
     if (window.mimoAPI) {
       try {
-        // 需要 API 支持 delete
-        console.log('Delete:', path);
+        await window.mimoAPI.file.delete(filePath);
 
         const updated = await loadFiles(projectPath, true);
         setFiles(updated);

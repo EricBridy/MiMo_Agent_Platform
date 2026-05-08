@@ -335,6 +335,32 @@ class MiMoDesktopApp {
       }));
     });
     
+    // 删除文件/目录
+    ipcMain.handle('file:delete', async (_, filePath: string) => {
+      const fs = await import('fs/promises');
+      const stat = await fs.stat(filePath);
+      if (stat.isDirectory()) {
+        await fs.rmdir(filePath, { recursive: true });
+      } else {
+        await fs.unlink(filePath);
+      }
+      return true;
+    });
+    
+    // 重命名文件/目录
+    ipcMain.handle('file:rename', async (_, oldPath: string, newPath: string) => {
+      const fs = await import('fs/promises');
+      await fs.rename(oldPath, newPath);
+      return true;
+    });
+    
+    // 创建目录
+    ipcMain.handle('file:createDir', async (_, dirPath: string) => {
+      const fs = await import('fs/promises');
+      await fs.mkdir(dirPath, { recursive: true });
+      return true;
+    });
+    
     // 执行命令
     ipcMain.handle('terminal:execute', async (_, command: string, cwd: string) => {
       const { exec } = await import('child_process');
