@@ -97,7 +97,7 @@ export interface WebSocketEvents {
   // 服务器 -> 客户端
   'joined': { room: string };
   'left': { room: string };
-  'message': ChatResponse;
+  'chat:message': ChatResponse;
   'tool:result': { toolCallId: string; result: any; error?: string };
   'error': { message: string; code?: string };
   'pong': { timestamp: number };
