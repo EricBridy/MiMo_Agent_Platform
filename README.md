@@ -67,24 +67,47 @@ mimo --help
 ┌─────────────────────────────────────────────────────────────┐
 │                        用户界面层                             │
 ├─────────────────────────────────────────────────────────────┤
-│  Web桌面端 │ Electron桌面端 │ React Native移动端 │ CLI终端   │
+│  Electron桌面端 │ React Native移动端 │ CLI终端              │
 ├─────────────────────────────────────────────────────────────┤
-│                       API网关层                              │
+│                       API网关层 (Gateway)                    │
 ├─────────────────────────────────────────────────────────────┤
-│                      Agent核心层                             │
+│  REST API │ WebSocket │ Prisma ORM │ SQLite                  │
+├─────────────────────────────────────────────────────────────┤
+│                      Agent核心层 (@mimo/core)                │
+├─────────────────────────────────────────────────────────────┤
+│  文件工具 │ Git工具 │ 搜索工具 │ 终端工具 │ 浏览器工具       │
 ├─────────────────────────────────────────────────────────────┤
 │                      服务集成层                              │
 ├─────────────────────────────────────────────────────────────┤
-│                      数据存储层                              │
+│  MiMo API │ 跨设备同步 │ 设备桥接                            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## 🛠️ 技术栈
 
-- **桌面端**: Electron 28+, React 18, TypeScript 5
-- **移动端**: React Native 0.73+, TypeScript 5
-- **后端**: Node.js 20, Express, Socket.IO
-- **AI**: LangChain, MiMo API
+- **桌面端**: Electron 28+, React 18, TypeScript 5, Socket.IO Client
+- **移动端**: React Native 0.73+, TypeScript 5, Socket.IO Client
+- **后端**: Node.js 20, Express, Socket.IO, Prisma ORM
+- **数据库**: SQLite (可扩展至 PostgreSQL)
+- **AI**: MiMo API, LangChain
+
+## 🔌 API 端点
+
+### Gateway 服务
+
+| 方法 | 端点 | 描述 |
+|------|------|------|
+| GET | `/health` | 健康检查 |
+| GET | `/api/v1/devices` | 获取设备列表 |
+| POST | `/api/v1/devices` | 注册设备 |
+| GET | `/api/v1/chat/sessions` | 获取会话列表 |
+| POST | `/api/v1/chat/sessions` | 创建会话 |
+| POST | `/api/v1/chat` | 发送消息 |
+| GET | `/api/v1/projects` | 获取项目列表 |
+| POST | `/api/v1/sync/pair` | 设备配对 |
+| POST | `/api/v1/tools/execute` | 执行工具 |
+
+查看 [Gateway README](./services/gateway/README.md) 获取完整 API 文档。
 
 ## 📖 文档
 
