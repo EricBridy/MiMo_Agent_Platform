@@ -1,4 +1,4 @@
-//**
+/**
  * Mobile Sync Service - 跨设备协同
  */
 

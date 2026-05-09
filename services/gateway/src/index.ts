@@ -8,6 +8,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import { createApp } from './app';
 import { setupWebSocketHandlers } from './websocket/handlers';
+import SyncService from './services/sync.service';
 import { logger } from './utils/logger';
 
 // 加载环境变量
@@ -38,6 +39,9 @@ async function main() {
   
   // 设置 WebSocket 处理器
   setupWebSocketHandlers(io);
+  
+  // 初始化同步服务
+  SyncService.initialize(io);
   
   // 启动服务器
   httpServer.listen(PORT, HOST, () => {
