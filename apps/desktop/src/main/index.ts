@@ -119,8 +119,9 @@ class MiMoDesktopApp {
   }
   
   private async initializeAgentServer() {
+    const port = 3002; // 使用不同端口避免与 Gateway 冲突
     agentServer = new AgentServer({
-      port: 3001,
+      port,
       deviceId: this.deviceId,
       deviceName: this.deviceName
     });
@@ -130,7 +131,7 @@ class MiMoDesktopApp {
     
     await agentServer.start();
     
-    console.log('Agent server started on port 3001');
+    console.log(`Agent server started on port ${port}`);
   }
   
   private createTray() {
