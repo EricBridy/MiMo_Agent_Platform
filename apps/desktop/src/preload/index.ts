@@ -43,6 +43,13 @@ contextBridge.exposeInMainWorld('mimoAPI', {
     url: () => ipcRenderer.invoke('server:url')
   },
   
+  // 配置管理
+  config: {
+    get: () => ipcRenderer.invoke('config:get'),
+    set: (key: string, value: any) => ipcRenderer.invoke('config:set', key, value),
+    setApiConfig: (url: string, key: string) => ipcRenderer.invoke('config:setApiConfig', url, key)
+  },
+  
   // 事件监听
   on: (channel: string, callback: (...args: any[]) => void) => {
     const validChannels = [
@@ -97,6 +104,11 @@ declare global {
       };
       server: {
         url: () => Promise<string>;
+      };
+      config: {
+        get: () => Promise<any>;
+        set: (key: string, value: any) => Promise<boolean>;
+        setApiConfig: (url: string, key: string) => Promise<boolean>;
       };
       on: (channel: string, callback: (...args: any[]) => void) => void;
       off: (channel: string, callback: (...args: any[]) => void) => void;

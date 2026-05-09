@@ -27,43 +27,44 @@ export interface AppState {
   // 视图状态
   currentView: ViewType;
   setView: (view: ViewType) => void;
-  
+
   // 设备信息
   deviceInfo: Device | null;
   loadDeviceInfo: () => Promise<void>;
-  
+
   // 聊天消息
   messages: Message[];
   addMessage: (message: Message) => void;
   clearMessages: () => void;
-  
+
   // 连接设备
   connectedDevices: Device[];
   addDevice: (device: Device) => void;
   removeDevice: (deviceId: string) => void;
   setConnectedDevices: (devices: Device[]) => void;
-  
+
   // 会话
   currentSessionId: string | null;
   setCurrentSessionId: (sessionId: string | null) => void;
-  
+
   // 项目
   currentProjectPath: string | null;
   setCurrentProjectPath: (path: string | null) => void;
-  
+
   // 设置
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
-  
+
   // API配置
   apiUrl: string;
   apiKey: string;
-  setApiConfig: (url: string, key: string) => void;
-  
+  setApiConfig: (url: string, key: string) => Promise<void>;
+  loadApiConfig: () => Promise<void>;
+
   // 加载状态
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  
+
   // 错误状态
   error: string | null;
   setError: (error: string | null) => void;
@@ -117,9 +118,23 @@ export const useStore = create<AppState>((set, get) => ({
   setShowSettings: (show) => set({ showSettings: show }),
   
   // API配置
-  apiUrl: process.env.MIMO_API_URL || 'http://localhost:3001',
-  apiKey: process.env.MIMO_API_KEY || '',
-  setApiConfig: (url, key) => set({ apiUrl: url, apiKey: key }),
+  apiUrl: 'https://api.mimo.com/v1',
+  apiKey: '',
+  setApiConfig: async (url, key) => {
+    set({ apiUrl: url, apiKey: key });
+    // 同步到主进程并持久化
+    if (window.mimoAPI?.config) {
+      await window.mimoAPI.config.setApiConfig(url, key);
+    }
+  },
+  loadApiConfig: async () => {
+    if (window.mimoAPI?.config) {
+      const config = await window.mimoAPI.config.get();
+      if (config) {
+        set({ apiUrl: config.apiUrl, apiKey: config.apiKey });
+      }
+    }
+  },
   
   // 加载状态
   isLoading: false,

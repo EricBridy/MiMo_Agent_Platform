@@ -4,9 +4,22 @@
 
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs/promises';
 import { AgentServer } from './server';
 import { DeviceBridge } from '@mimo/device-bridge';
 import { generateId } from '@mimo/shared';
+
+// 配置文件路径
+const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
+
+// 默认配置
+const defaultConfig = {
+  apiUrl: process.env.MIMO_API_URL || 'https://api.mimo.com/v1',
+  apiKey: process.env.MIMO_API_KEY || ''
+};
+
+// 全局配置对象
+let appConfig = { ...defaultConfig };
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -26,6 +39,9 @@ class MiMoDesktopApp {
   }
   
   async initialize() {
+    // 加载保存的配置
+    await this.loadConfig();
+    
     // 初始化设备桥接
     this.initializeDeviceBridge();
     
@@ -391,6 +407,28 @@ class MiMoDesktopApp {
     ipcMain.handle('server:url', () => {
       return `http://localhost:3001`;
     });
+    
+    // 获取配置
+    ipcMain.handle('config:get', () => {
+      return appConfig;
+    });
+    
+    // 设置配置项
+    ipcMain.handle('config:set', async (_, key: string, value: any) => {
+      (appConfig as any)[key] = value;
+      await this.saveConfig();
+      return true;
+    });
+    
+    // 设置API配置
+    ipcMain.handle('config:setApiConfig', async (_, url: string, key: string) => {
+      appConfig.apiUrl = url;
+      appConfig.apiKey = key;
+      await this.saveConfig();
+      // 更新AgentServer的配置
+      agentServer?.updateApiConfig(url, key);
+      return true;
+    });
   }
   
   private showWakeNotification(request: any) {
@@ -414,6 +452,29 @@ class MiMoDesktopApp {
     
     if (result.filePaths[0]) {
       mainWindow?.webContents.send('project:opened', result.filePaths[0]);
+    }
+  }
+  
+  // 加载配置
+  private async loadConfig() {
+    try {
+      const data = await fs.readFile(CONFIG_PATH, 'utf-8');
+      const saved = JSON.parse(data);
+      appConfig = { ...defaultConfig, ...saved };
+      console.log('Config loaded:', appConfig);
+    } catch (error) {
+      console.log('Using default config');
+      appConfig = { ...defaultConfig };
+    }
+  }
+  
+  // 保存配置
+  private async saveConfig() {
+    try {
+      await fs.writeFile(CONFIG_PATH, JSON.stringify(appConfig, null, 2), 'utf-8');
+      console.log('Config saved');
+    } catch (error) {
+      console.error('Failed to save config:', error);
     }
   }
 }

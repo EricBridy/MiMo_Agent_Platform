@@ -14,21 +14,23 @@ import SettingsModal from './components/SettingsModal';
 import './styles/App.css';
 
 function App() {
-  const { 
-    currentView, 
+  const {
+    currentView,
     setView,
     loadDeviceInfo,
+    loadApiConfig,
     showSettings,
     setShowSettings,
     isLoading
   } = useStore();
-  
+
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
+
   useEffect(() => {
-    // 加载设备信息
+    // 加载设备信息和API配置
     loadDeviceInfo();
+    loadApiConfig();
     
     // 监听IPC事件
     if (window.mimoAPI) {

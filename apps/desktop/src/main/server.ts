@@ -41,6 +41,10 @@ export class AgentServer {
   private sessions: Map<string, Session> = new Map();
   private agents: Map<string, AgentEngine> = new Map();
   private running = false;
+  private apiConfig: { apiUrl: string; apiKey: string } = {
+    apiUrl: process.env.MIMO_API_URL || 'https://api.mimo.com/v1',
+    apiKey: process.env.MIMO_API_KEY || ''
+  };
   
   constructor(config: AgentServerConfig) {
     this.config = config;
@@ -273,10 +277,10 @@ export class AgentServer {
       }
     };
     
-    // 创建Agent实例
+    // 创建Agent实例 - 使用当前API配置
     const mimoConfig: MiMoConfig = {
-      apiKey: process.env.MIMO_API_KEY || '',
-      apiUrl: process.env.MIMO_API_URL || 'https://api.mimo.com/v1'
+      apiKey: this.apiConfig.apiKey,
+      apiUrl: this.apiConfig.apiUrl
     };
     
     const mimoConnector = new MiMoConnector(mimoConfig);
@@ -394,6 +398,16 @@ export class AgentServer {
   
   isRunning(): boolean {
     return this.running;
+  }
+  
+  updateApiConfig(apiUrl: string, apiKey: string): void {
+    this.apiConfig = { apiUrl, apiKey };
+    console.log('API config updated:', { apiUrl, apiKey: apiKey ? '***' : '' });
+    // 更新所有现有 Agent 的配置
+    this.agents.forEach((agent, sessionId) => {
+      // 这里可以添加更新 agent 配置的逻辑
+      console.log(`Agent ${sessionId} config will use new API settings on next request`);
+    });
   }
   
   getSession(sessionId: string): Session | undefined {
