@@ -58,6 +58,13 @@ async function main() {
     console.log(`   tool    - Execute tool`);
     console.log(`   ping    - Heartbeat`);
     console.log('');
+    console.log('🔄 Sync endpoints:');
+    console.log(`   POST /api/v1/sync/pair         - Pair devices`);
+    console.log(`   POST /api/v1/sync/unpair       - Unpair devices`);
+    console.log(`   GET  /api/v1/sync/pair/:id     - Get pair status`);
+    console.log(`   POST /api/v1/sync/state        - Sync state`);
+    console.log(`   POST /api/v1/sync/share-session - Share session`);
+    console.log('');
   });
   
   // 优雅关闭

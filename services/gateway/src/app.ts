@@ -48,10 +48,11 @@ export const createApp = () => {
   });
   
   // API 路由
-app.use('/api/v1/chat', chatRoutes);
-app.use('/api/v1/devices', deviceRoutes);
-app.use('/api/v1/files', fileRoutes);
-app.use('/api/v1/projects', projectRoutes);
+  app.use('/api/v1/chat', chatRoutes);
+  app.use('/api/v1/devices', deviceRoutes);
+  app.use('/api/v1/files', fileRoutes);
+  app.use('/api/v1/projects', projectRoutes);
+  app.use('/api/v1/sync', syncRoutes);
   
   // 404 处理
   app.use(notFoundHandler);
