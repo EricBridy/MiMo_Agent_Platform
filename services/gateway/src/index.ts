@@ -65,6 +65,10 @@ async function main() {
     console.log(`   POST /api/v1/sync/state        - Sync state`);
     console.log(`   POST /api/v1/sync/share-session - Share session`);
     console.log('');
+    console.log('🛠️  Tools endpoints:');
+    console.log(`   GET  /api/v1/tools/list        - List available tools`);
+    console.log(`   POST /api/v1/tools/execute     - Execute tool`);
+    console.log('');
   });
   
   // 优雅关闭

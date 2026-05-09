@@ -14,6 +14,8 @@ import chatRoutes from './routes/chat';
 import deviceRoutes from './routes/devices';
 import fileRoutes from './routes/files';
 import projectRoutes from './routes/projects';
+import syncRoutes from './routes/sync';
+import toolsRoutes from './routes/tools';
 
 export const createApp = () => {
   const app = express();
@@ -53,6 +55,7 @@ export const createApp = () => {
   app.use('/api/v1/files', fileRoutes);
   app.use('/api/v1/projects', projectRoutes);
   app.use('/api/v1/sync', syncRoutes);
+  app.use('/api/v1/tools', toolsRoutes);
   
   // 404 处理
   app.use(notFoundHandler);
