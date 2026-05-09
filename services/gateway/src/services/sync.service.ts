@@ -24,9 +24,10 @@ class SyncService {
   }
 
   async pairDevices(deviceId: string, pairedDeviceId: string): Promise<DevicePair> {
-    const pair: DevicePair = { deviceId, pairedDeviceId, pairedAt: new Date() };
+    const pairedAt = new Date();
+    const pair: DevicePair = { deviceId, pairedDeviceId, pairedAt };
     this.devicePairs.set(deviceId, pair);
-    this.devicePairs.set(pairedDeviceId, { deviceId: pairedDeviceId, pairedDeviceId: deviceId, pairedAt: new Date() });
+    this.devicePairs.set(pairedDeviceId, { deviceId: pairedDeviceId, pairedDeviceId: deviceId, pairedAt });
     this.broadcastToDevice(deviceId, 'device:paired', { pairedDeviceId });
     this.broadcastToDevice(pairedDeviceId, 'device:paired', { pairedDeviceId: deviceId });
     logger.info('Devices paired', { deviceId, pairedDeviceId });
@@ -49,8 +50,23 @@ class SyncService {
   }
 
   async saveSyncState(deviceId: string, sessionId: string, state: any): Promise<void> {
-    await prisma.syncState.create({
-      data: { deviceId, sessionId, state: JSON.stringify(state) },
+    // 只保留最近 10 条同步状态记录
+    await prisma.$transaction(async (tx) => {
+      await tx.syncState.create({
+        data: { deviceId, sessionId, state: JSON.stringify(state) },
+      });
+      // 删除旧记录
+      const oldStates = await tx.syncState.findMany({
+        where: { deviceId, sessionId },
+        orderBy: { timestamp: 'desc' },
+        skip: 10,
+        select: { id: true },
+      });
+      if (oldStates.length > 0) {
+        await tx.syncState.deleteMany({
+          where: { id: { in: oldStates.map(s => s.id) } },
+        });
+      }
     });
   }
 

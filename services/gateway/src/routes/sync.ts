@@ -26,6 +26,9 @@ router.post('/pair', async (req, res, next) => {
 router.post('/unpair', async (req, res, next) => {
   try {
     const { deviceId } = req.body;
+    if (!deviceId) {
+      return res.status(400).json({ success: false, error: 'deviceId is required' });
+    }
     await SyncService.unpairDevices(deviceId);
     res.json({ success: true, message: 'Devices unpaired' });
   } catch (error) {
